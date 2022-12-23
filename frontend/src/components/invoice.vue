@@ -19,7 +19,7 @@ export default {
                 let front = strNumber.substring(0, strLength - (3 * (i + 1) + i))
                 let back = strNumber.substring(strLength - (3 * (i + 1) + i), strLength)
                 if (front) {
-                    strNumber = front + "." + back
+                    strNumber = front + "," + back
                 }
                 strLength = strNumber.length
             }
@@ -27,8 +27,23 @@ export default {
         }
     },
     computed: {
+        updateTotal() {
+            let cart = this.invoiceStore.cart
+            let total = 0
+            for (let i = 0; i < cart.length; i++) {
+                total += cart[i].subTotal
+            }
+            this.invoiceStore.total = total
+            return this.invoiceStore.total
+        },
         diskonFormat() {
-            return (this.invoiceStore.diskon * 100).toString() + "%"
+            return (this.invoiceStore.discount * 100).toString() + "%"
+        },
+        updateGTotal() {
+            let total = this.invoiceStore.total
+            let discount = this.invoiceStore.discount
+            this.invoiceStore.grandTotal = Math.floor(total * (1 - discount))
+            return this.invoiceStore.grandTotal
         }
     }
     ,
@@ -67,33 +82,34 @@ export default {
         <!-- invoice body -->
         <div class="row bg-success d-flex flex-fill">
             <!-- invoice products -->
-            <div class="row bg-warning m-0 overflow-auto" style="height: 85%">
+            <div class="row bg-warning m-0 overflow-auto" style="height: 481px">
                 <div class="container-fluid p-2">
                     <!-- a product -->
-                    <div class="row overflow-hidden mt-3" style="border-radius: 9px">
+                    <div class="row overflow-hidden mt-3" style="border-radius: 9px"
+                        v-for="(cart, index) in invoiceStore.cart">
                         <!-- image -->
                         <div class="col-12 bg-danger p-0" style="height: 110px">
-                            <img src="https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg?auto=compress&cs=tinysrgb&w=300"
-                                alt="">
+                            <img :src="cart.imgLink" alt="">
                         </div>
 
                         <!-- product's descriptions -->
                         <div class="col-12 bg-primary">
                             <!-- item name -->
-                            <div>Kamera 1</div>
+                            <div>{{ cart.name }}</div>
 
                             <!-- item price and qty -->
                             <div class="container-fluid mt-1">
                                 <div class="row p-0">
-                                    <div class="col-4 p-0 d-flex align-items-center">Rp. 30.000 x </div>
+                                    <div class="col-4 p-0 d-flex align-items-center">{{ rpFormat(cart.price) }} x
+                                    </div>
                                     <div class="col-5 p-0">
-                                        <quantityInput></quantityInput>
+                                        <quantityInput :pId="cart.product_id" :pIndex="index"></quantityInput>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- sub total -->
-                            <div style="text-align:end;" class="mt-3"><b>Rp. 90.000</b></div>
+                            <div style="text-align:end;" class="mt-3"><b>{{ rpFormat(cart.subTotal) }}</b></div>
                         </div>
                     </div>
                 </div>
@@ -108,7 +124,7 @@ export default {
                             <div class="container-fluid">
                                 <div class="row">
                                     <div class="col-5">Total</div>
-                                    <div class="col-7">: {{ rpFormat(invoiceStore.total) }}</div>
+                                    <div class="col-7">: {{ rpFormat(updateTotal) }}</div>
                                 </div>
                             </div>
 
@@ -124,7 +140,7 @@ export default {
                             <div class="container-fluid">
                                 <div class="row">
                                     <div class="col-5">Grand Total</div>
-                                    <div class="col-7">: {{ rpFormat(invoiceStore.grandTotal) }}</div>
+                                    <div class="col-7">: {{ rpFormat(updateGTotal) }}</div>
                                 </div>
                             </div>
                         </div>
