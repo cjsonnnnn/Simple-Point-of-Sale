@@ -21,13 +21,35 @@ export const useDataStore = defineStore('data', {
         ],
         transaction: [
             {
+                // noInvoice: "",
+                // product: [],
+                // grandTotal: "",
+                // date: "",
             }
         ],
         category: [
             "All",
             "Kamera"
-        ]
+        ],
     }),
+
+    actions: {
+        rpFormat(number) {
+            let strNumber = (number).toString()
+            let strLength = strNumber.length
+            let loopNumber = Math.floor(strLength / 3)
+            let rupiah = "Rp. "
+            for (let i = 0; i < loopNumber; i++) {
+                let front = strNumber.substring(0, strLength - (3 * (i + 1) + i))
+                let back = strNumber.substring(strLength - (3 * (i + 1) + i), strLength)
+                if (front) {
+                    strNumber = front + "," + back
+                }
+                strLength = strNumber.length
+            }
+            return rupiah.concat(strNumber)
+        }
+    }
 })
 
 

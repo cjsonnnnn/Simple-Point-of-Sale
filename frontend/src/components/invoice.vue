@@ -10,43 +10,12 @@ export default {
         }
     },
     methods: {
-        rpFormat(number) {
-            let strNumber = (number).toString()
-            let strLength = strNumber.length
-            let loopNumber = Math.floor(strLength / 3)
-            let rupiah = "Rp. "
-            for (let i = 0; i < loopNumber; i++) {
-                let front = strNumber.substring(0, strLength - (3 * (i + 1) + i))
-                let back = strNumber.substring(strLength - (3 * (i + 1) + i), strLength)
-                if (front) {
-                    strNumber = front + "," + back
-                }
-                strLength = strNumber.length
-            }
-            return rupiah.concat(strNumber)
+        gotoPayment() {
+            this.$router.push({
+                path: "/payment"
+            })
         }
     },
-    computed: {
-        updateTotal() {
-            let cart = this.invoiceStore.cart
-            let total = 0
-            for (let i = 0; i < cart.length; i++) {
-                total += cart[i].subTotal
-            }
-            this.invoiceStore.total = total
-            return this.invoiceStore.total
-        },
-        diskonFormat() {
-            return (this.invoiceStore.discount * 100).toString() + "%"
-        },
-        updateGTotal() {
-            let total = this.invoiceStore.total
-            let discount = this.invoiceStore.discount
-            this.invoiceStore.grandTotal = Math.floor(total * (1 - discount))
-            return this.invoiceStore.grandTotal
-        }
-    }
-    ,
     created() {
         this.invoiceStore = useInvoiceStore()
     }
@@ -55,20 +24,20 @@ export default {
 
 
 <template>
-    <!-- left area -->
+    <!-- invoice and payment stuffs -->
     <div class="col-3 bg-warning d-flex flex-column flex-wrap">
         <!-- header invoice -->
         <div class="row bg-secondary p-2">
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-4 pt-2">No Invoice</div>
-                    <div class="col-8 pt-2">: {{ invoiceStore.noInvoice }}</div>
+                    <div class="col-8 pt-2">: {{ invoiceStore.updateInvoiceId }}</div>
                 </div>
             </div>
             <div class="container-fluid">
                 <div class="row">
-                    <div class="col-4 pt-2 pb-2">Tanggal</div>
-                    <div class="col-8 pt-2 pb-2">: {{ invoiceStore.date }}</div>
+                    <div class="col-4 pt-2 pb-2">Date</div>
+                    <div class="col-8 pt-2 pb-2">: {{ invoiceStore.updateDate }}</div>
                 </div>
             </div>
             <div class="container-fluid">
@@ -100,7 +69,9 @@ export default {
                             <!-- item price and qty -->
                             <div class="container-fluid mt-1">
                                 <div class="row p-0">
-                                    <div class="col-4 p-0 d-flex align-items-center">{{ rpFormat(cart.price) }} x
+                                    <div class="col-4 p-0 d-flex align-items-center">{{
+                                            invoiceStore.rpFormat(cart.price)
+                                    }} x
                                     </div>
                                     <div class="col-5 p-0">
                                         <quantityInput :pId="cart.product_id" :pIndex="index"></quantityInput>
@@ -109,7 +80,8 @@ export default {
                             </div>
 
                             <!-- sub total -->
-                            <div style="text-align:end;" class="mt-3"><b>{{ rpFormat(cart.subTotal) }}</b></div>
+                            <div style="text-align:end;" class="mt-3"><b>{{ invoiceStore.rpFormat(cart.subTotal) }}</b>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -124,7 +96,7 @@ export default {
                             <div class="container-fluid">
                                 <div class="row">
                                     <div class="col-5">Total</div>
-                                    <div class="col-7">: {{ rpFormat(updateTotal) }}</div>
+                                    <div class="col-7">: {{ invoiceStore.rpFormat(invoiceStore.updateTotal) }}</div>
                                 </div>
                             </div>
 
@@ -132,7 +104,7 @@ export default {
                             <div class="container-fluid">
                                 <div class="row">
                                     <div class="col-5">Diskon</div>
-                                    <div class="col-7">: {{ diskonFormat }}</div>
+                                    <div class="col-7">: {{ invoiceStore.discountFormat }}</div>
                                 </div>
                             </div>
 
@@ -140,7 +112,7 @@ export default {
                             <div class="container-fluid">
                                 <div class="row">
                                     <div class="col-5">Grand Total</div>
-                                    <div class="col-7">: {{ rpFormat(updateGTotal) }}</div>
+                                    <div class="col-7">: {{ invoiceStore.rpFormat(invoiceStore.updateGTotal) }}</div>
                                 </div>
                             </div>
                         </div>
@@ -152,7 +124,9 @@ export default {
         <!-- commands -->
         <div class="row m-2" style="height: 45px">
             <div class="col-12 d-flex justify-content-center bg-danger">
-                <button type="button" class="btn btn-primary p-2" style="width: 72%">Primary</button>
+                <button type="button" class="btn btn-primary p-2" style="width: 72%" @click="gotoPayment">
+                    Primary
+                </button>
             </div>
         </div>
     </div>
