@@ -20,21 +20,6 @@ export default {
                 this.searchIds = categoryName
             }
         },
-        rpFormat(number) {
-            let strNumber = (number).toString()
-            let strLength = strNumber.length
-            let loopNumber = Math.floor(strLength / 3)
-            let rupiah = "Rp. "
-            for (let i = 0; i < loopNumber; i++) {
-                let front = strNumber.substring(0, strLength - (3 * (i + 1) + i))
-                let back = strNumber.substring(strLength - (3 * (i + 1) + i), strLength)
-                if (front) {
-                    strNumber = front + "." + back
-                }
-                strLength = strNumber.length
-            }
-            return rupiah.concat(strNumber)
-        }
     },
     computed: {
         filteredProduct() {
@@ -78,7 +63,9 @@ export default {
                             <div class="container-fluid mt-1">
                                 <div class="row p-0 d-flex flex-column align-items-end">
                                     <!-- price -->
-                                    <div class="col-12 p-0 d-flex align-items-center">{{ rpFormat(product.price) }}
+                                    <div class="col-12 p-0 d-flex align-items-center">{{
+                                            dataStore.rpFormat(product.price)
+                                    }}
                                     </div>
 
                                     <!-- update cart -->
