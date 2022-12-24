@@ -20,9 +20,10 @@ export default {
         paymentConfirmation() {
             // update data, transaction
             let transaction = {
-                noInvoice: this.invoiceStore.invoiceId,
+                invoiceId: this.invoiceStore.invoiceId,
+                username: this.invoiceStore.username,
                 product: [],
-                grandTotal: this.invoiceStore.grandTotal,
+                total: this.invoiceStore.grandTotal,
                 date: this.invoiceStore.date,
             }
             // get products from cart
