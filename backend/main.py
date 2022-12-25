@@ -1,10 +1,11 @@
 from flask import Flask, redirect, request, url_for, render_template, session, jsonify
-import json
 from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
 from datetime import datetime
 from datetime import timedelta
 from uuid import uuid4
 from flask_cors import CORS
+import json
 
 
 # init
@@ -26,44 +27,50 @@ CORS(app, resources={r"/*":{'origins': "*"}})
 
 
 db = SQLAlchemy(app)
+ma = Marshmallow(app)
 
 
 # create database models 
 class Product(db.Model):
     __tablename__ = "product"
-    product_id = db.Column(db.String(200), primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    qty = db.Column(db.String(200), nullable=False)
+    product_id = db.Column(db.String(18), primary_key=True)
+    name = db.Column(db.String(54), nullable=False)
     price = db.Column(db.String(200), nullable=False)
-    category = db.Column(db.String(200), unique=True, nullable=False)
+    img_link = db.Column(db.String(999), nullable=False)
 
-    def __init__(self, name, qty, price, category):
+    def __init__(self, name, price, img_link):
         self.product_id = "p-" + datetime.now().strftime("%Y%m%d%H%M%S")
         self.name = name
-        self.qty = qty
         self.price = price
-        self.category = category
-    
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__, 
-            sort_keys=True, indent=4)
+        self.img_link = img_link
+
+
+class ProductSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Product
+        include_fk = True
 
 
 
 
-@app.route("/addP", methods=["GET", "POST"])
+@app.route("/lol")
 def addProduct():
-    print("hello")
-    if request.method == "POST":
-        newProduct = Product("sdakgsjdq", "sdakgsjdq", "sdakgsjdq", "sdakgsjdq")
-        db.session.add(newProduct)
-        db.session.commit()
-        return "hai"
+    # print("hello")
+    # if request.method == "POST":
+    #     newProduct = Product("sdakgsjdq", "sdakgsjdq", "sdakgsjdq", "sdakgsjdq")
+    #     db.session.add(newProduct)
+    #     db.session.commit()
+    #     return "hai"
+    # return jsonify({
+    #     "hai": output
+    # })
+    return "hai"
 
 @app.route("/getProduct", methods=["GET"])
 def getProduct():
-    product = Product.query.filter_by(product_id="p-20221223031544").first()
-    return product.toJSON()
+    product = Product.query.all()
+    product_schema = ProductSchema(many=True)
+    return product_schema.dump(product)
 
 
 

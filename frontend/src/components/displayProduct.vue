@@ -20,6 +20,29 @@ export default {
                 this.searchIds = categoryName
             }
         },
+        // getData() {
+        //     console.log(axios({
+        //         method: 'post',
+        //         url: 'http://localhost:5000/addP',
+        //         data: this.product[0]
+        //     }).then(res => {
+        //         console.log("got it");
+        //         console.log(res);
+        //     }).catch(err => {
+        //         console.log("error")
+        //         console.log(err);
+        //     }))
+        // }
+        // getData() {
+        //     console.log(axios.get('http://localhost:5000/getProduct')
+        //         .then(res => {
+        //             console.log("got it");
+        //             console.log(res);
+        //         }).catch(err => {
+        //             console.log("error")
+        //             console.log(err);
+        //         }))
+        // }
     },
     computed: {
         filteredProduct() {

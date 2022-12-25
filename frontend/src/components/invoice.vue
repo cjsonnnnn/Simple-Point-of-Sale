@@ -124,9 +124,30 @@ export default {
         <!-- commands -->
         <div class="row m-2" style="height: 45px">
             <div class="col-12 d-flex justify-content-center bg-danger">
-                <button type="button" class="btn btn-primary p-2" style="width: 72%" @click="gotoPayment">
-                    Primary
+                <button type="button" class="btn btn-primary p-2" style="width: 72%" @click="gotoPayment"
+                    v-if="invoiceStore.cart.length > 0">
+                    Proceed Payment
                 </button>
+                <button type="button" class="btn btn-primary p-2" style="width: 72%" data-bs-toggle="modal"
+                    data-bs-target="#alert-empty-cart" v-else>
+                    Proceed Payment
+                </button>
+            </div>
+        </div>
+
+
+        <!-- alert modal -->
+        <div class="modal fade" tabindex="-1" id="alert-empty-cart">
+            <div class="modal-dialog">
+                <div class="modal-content text-black">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Alert</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Please fill the cart</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
