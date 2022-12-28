@@ -17,7 +17,7 @@ export default {
 
 <template>
     <!-- title -->
-    <div class="text-center mt-5">
+    <div class="text-center mt-5 text-light">
         <h1>Simple Point of Sale</h1>
     </div>
 
@@ -29,13 +29,13 @@ export default {
             <invoice></invoice>
 
             <!-- display and admin command stuffs -->
-            <div class="col-9 d-flex flex-column flex-wrap">
+            <div class="col-9 d-flex flex-column flex-wrap border border-light">
                 <!-- display -->
                 <displayProduct></displayProduct>
 
                 <!-- admin command -->
                 <div class="row m-2" style="height: 45px">
-                    <div class="col-12 d-flex justify-content-center bg-danger">
+                    <div class="col-12 d-flex justify-content-center">
                         <button type="button" class="btn btn-primary p-2" style="width: 72%;"
                             @click="gotoReportSale">Sale Report</button>
                     </div>
