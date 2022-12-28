@@ -1,11 +1,9 @@
 <script>
-import { useInvoiceStore } from '../stores/invoice';
 import { useDataStore } from '../stores/data';
 
 export default {
     data() {
         return {
-            invoiceStore: {},
             dataStore: {}
         }
     },
@@ -16,46 +14,47 @@ export default {
             })
         },
 
-        // temporary
         paymentConfirmation() {
-            // update data, transaction
-            let transaction = {
-                invoiceId: this.invoiceStore.invoiceId,
-                username: this.invoiceStore.username,
-                product: [],
-                total: this.invoiceStore.grandTotal,
-                date: this.invoiceStore.date,
+            // update data, invoice
+            let invoice = {
+                username: "cusA",
+                products: this.dataStore.cart.product_association,
+                total_qty: this.dataStore.updateTotalQTY,
+                total_price: this.dataStore.cart.grand_price,
+                date: this.dataStore.cart.date,
             }
-            // get products from cart
-            for (let i = 0; i < this.invoiceStore.cart.length; i++) {
-                transaction.product.push(this.invoiceStore.cart[i].product_id)
-            }
-            this.dataStore.transaction.push(transaction)
-            console.log(this.dataStore.transaction)
+            // get product ids from cart
+            // for (let i = 0; i < this.dataStore.cart.product_association.length; i++) {
+            //     invoice.products.push(this.dataStore.cart.product_association[i])
+            // }
+            // this.dataStore.invoice.push(invoice)
+            // console.log(this.dataStore.invoice)
+            this.dataStore.addInvoice(invoice)
 
-            // reset invoice
-            this.invoiceStore.resetInvoice()
+            // reset cart
+            this.dataStore.resetCart("cusA")
 
             // back to home page
             this.gotoHome()
         }
     },
     created() {
-        this.invoiceStore = useInvoiceStore(),
-            this.dataStore = useDataStore()
+        this.dataStore = useDataStore()
+        this.dataStore.getProducts()
+        this.dataStore.getCart("cusA")
     }
 }
 </script>
 <template>
     <!-- title -->
-    <div class="text-center mt-5">
+    <div class="text-center mt-5 text-light">
         <h1>Payment</h1>
     </div>
 
-    <div class="bg-secondary" style="height: 774px">
+    <div style="height: 774px">
         <!-- table container -->
-        <div class="container-fluid bg-warning overflow-auto" style="height: 630px">
-            <table class="table text-white table-hover">
+        <div class="container-fluid overflow-auto" style="height: 630px">
+            <table class="table text-white">
                 <thead class="table-light text-center">
                     <tr>
                         <th scope="col" style="width: 54px">No</th>
@@ -66,54 +65,54 @@ export default {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(product, index) in invoiceStore.cart">
+                    <tr v-for="(product, index) in dataStore.cart.product_association">
                         <th scope="row">{{ index + 1 }}</th>
-                        <td>{{ product.name }}</td>
+                        <td>{{ dataStore.product[index].name }}</td>
                         <td>{{ product.qty }}</td>
-                        <td>{{ invoiceStore.rpFormat(product.price) }}</td>
-                        <td>{{ invoiceStore.rpFormat(product.subTotal) }}</td>
+                        <td>{{ dataStore.rpFormat(dataStore.product[index].price) }}</td>
+                        <td>{{ dataStore.rpFormat(product.subtotal) }}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <!-- summarizes -->
-        <div class="container-fluid">
-            <div class="row bg-primary justify-content-end">
-                <div class="col-4 p-0">
-                    <div class="container-fluid bg-success">
+        <div class="container-fluid ">
+            <div class="row justify-content-end">
+                <div class="col-4 p-2 border border-light">
+                    <div class="container-fluid text-light">
                         <!-- total -->
                         <div class="row">
-                            <div class="col-4 bg-danger p-2">
+                            <div class="col-4 p-2">
                                 Total
                             </div>
-                            <div class="col-8 bg-danger p-2">
-                                : {{ invoiceStore.rpFormat(invoiceStore.total) }}
+                            <div class="col-8 p-2">
+                                : {{ dataStore.rpFormat(dataStore.cart.price) }}
                             </div>
                         </div>
 
                         <!-- discount -->
                         <div class="row">
-                            <div class="col-4 bg-danger p-2">
-                                Diskon
+                            <div class="col-4 p-2">
+                                Discount
                             </div>
-                            <div class="col-8 bg-danger p-2">
-                                : {{ invoiceStore.discountFormat }}
+                            <div class="col-8 p-2">
+                                : {{ dataStore.discountFormat }}
                             </div>
                         </div>
 
                         <!-- grand total -->
                         <div class="row">
-                            <div class="col-4 bg-danger p-2">
+                            <div class="col-4 p-2">
                                 Grand Total
                             </div>
-                            <div class="col-8 bg-danger p-2">
-                                : {{ invoiceStore.rpFormat(invoiceStore.grandTotal) }}
+                            <div class="col-8 p-2">
+                                : {{ dataStore.rpFormat(dataStore.cart.grand_price) }}
                             </div>
                         </div>
 
                         <!-- confirm payment -->
-                        <div class="row bg-warning">
+                        <div class="row">
                             <button type="button" class="btn btn-success col-12 p-2 mt-2" data-bs-toggle="modal"
                                 data-bs-target="#payconf">Confirm Payment</button>
                         </div>
