@@ -1,12 +1,9 @@
-from flask import Flask, redirect, request, url_for, render_template, session, jsonify
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
-from sqlalchemy import MetaData, select
 from sqlalchemy.ext.associationproxy import association_proxy
 from datetime import datetime
-from datetime import timedelta
-from flask_cors import CORS, cross_origin
-import json
+from flask_cors import CORS
 
 
 # init
@@ -27,9 +24,10 @@ CORS(app, resources={r"/*":{'origins': "*"}})
 #     "allow_headers": "Access-Control-Allow-Origin"
 #     }})
 
-
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
+
+
 
 
 # secondary database models 
