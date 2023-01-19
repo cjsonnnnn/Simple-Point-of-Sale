@@ -52,8 +52,8 @@ export default {
 </script>
 <template>
     <div class="input-group input-group-sm">
-        <button class="btn btn-secondary" type="button" @click="decreaseCount">-</button>
-        <input type="number" class="form-control text-center" v-model="dataStore.cart.product_association[pIndex].qty">
         <button class="btn btn-secondary" type="button" @click="increaseCount">+</button>
+        <input type="number" class="form-control text-center" v-model="dataStore.cart.product_association[pIndex].qty">
+        <button class="btn btn-secondary" type="button" @click="decreaseCount">-</button>
     </div>
 </template>

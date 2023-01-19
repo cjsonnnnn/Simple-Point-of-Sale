@@ -80,7 +80,7 @@ export default {
                 <div class="container-fluid p-2">
                     <!-- a product -->
                     <div class="row overflow-hidden mt-3 bg-light text-black" style="border-radius: 9px"
-                        v-for="(product, index) in getCartedProducts">
+                        v-for="(product, index) in getCartedProducts" :key="product.id">
                         <!-- image -->
                         <div class="col-12 p-0" style="height: 110px">
                             <img :src="product.img_link" alt="">
