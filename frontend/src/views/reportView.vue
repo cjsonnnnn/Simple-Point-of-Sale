@@ -16,7 +16,6 @@ export default {
     },
     computed: {
         getInvoices() {
-            console.log("ANJAY")
             console.log(this.dataStore.invoice)
             return this.dataStore.invoice
         }

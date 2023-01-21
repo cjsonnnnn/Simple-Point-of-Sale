@@ -14,31 +14,17 @@ export default {
             this.dataStore.addCartProduct("cusA", this.pId)
         },
         cancelCartProduct() {
-            // // remove all item of a product from cart
-            // let cart = this.dataStore.cart
-            // let index = cart.findIndex(x => x.id === this.pId)
-
-            // // to avoid removing object from index -1 or under
-            // if (index > -1) {
-            //     cart.splice(index, 1)
-            // }
+            // // remove a product from cart
             this.dataStore.removeCartProduct("cusA", this.pId)
         }
     },
     computed: {
         isCarted() {
-            // console.log("isCarted")
             let cartProducts = []
-            // console.log(this.dataStore.cart.product_association)
-            // console.log(this.dataStore.cart.product_association.length)
             for (let i = 0; i < this.dataStore.cart.product_association.length; i++) {
                 cartProducts.push(this.dataStore.cart.product_association[i])
             }
-            // console.log(cartProducts)
-            let a = cartProducts.find(x => x.product_id === this.pId)
-            // console.log(a)
-            // console.log(" ")
-            return a
+            return cartProducts.find(x => x.product_id === this.pId)
         }
     },
     created() {

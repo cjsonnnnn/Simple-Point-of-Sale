@@ -109,6 +109,7 @@ export const useDataStore = defineStore('data', {
             axios.get(`http://localhost:5000/resetCart/${username}`)
                 .then(res => {
                     console.log(res)
+                    // update cart based on username
                     this.getCart("cusA")
                 }).catch(err => {
                     console.log(err)
@@ -129,6 +130,7 @@ export const useDataStore = defineStore('data', {
         addInvoice(invoiceData) {
             axios.post('http://localhost:5000/addInvoice', invoiceData)
                 .then(res => {
+                    // update invoice
                     this.getInvoice("cusA")
                 }).catch(err => {
                     console.log(err)
