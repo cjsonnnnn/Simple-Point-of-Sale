@@ -1,4 +1,5 @@
 <script>
+import { useCustomerStore } from '../stores/customer';
 import { useDataStore } from '../stores/data';
 import quantityInput from './quantityInput.vue';
 
@@ -7,7 +8,8 @@ export default {
     data() {
         return {
             dataStore: {},
-            cartedProducts: [],
+            customerStore: {},
+            cartedProducts: []
         }
     },
     methods: {
@@ -17,6 +19,21 @@ export default {
             this.$router.push({
                 path: "/payment"
             })
+        },
+        loginCustomer() {
+            let usernameElement = document.getElementById("customerUsername")
+            let passwordElement = document.getElementById("customerPassword")
+
+            // send data to store
+            let dataLogin = {
+                "username": usernameElement.value,
+                "password": passwordElement.value
+            }
+            this.customerStore.login(dataLogin)
+
+            // update form appearances
+            usernameElement.value = ""
+            passwordElement.value = ""
         }
     },
     computed: {
@@ -36,23 +53,26 @@ export default {
             // console.log(this.cartedProducts)
             // console.log(this.cartedProducts[0])
             return this.cartedProducts
-        },
-        test() {
-            console.log("test")
         }
     },
     created() {
         this.dataStore = useDataStore()
+        this.customerStore = useCustomerStore()
+
+        // re-verify whether or not a user is logged in
+        this.customerStore.getSession()
     }
 }
 </script>
 
 
 <template>
+    <div>{{ this.customerStore.csrfToken }}</div>
+    <div>{{ this.customerStore.isAuthenticated }}</div>
     <!-- invoice and payment stuffs -->
     <div class="col-3 d-flex flex-column flex-wrap border border-light">
         <!-- header invoice -->
-        <div class="row p-2 text-light border border-light">
+        <div class="row p-2 text-light border border-light" v-if="this.customerStore.isAuthenticated">
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-4 pt-2">Cart ID</div>
@@ -69,6 +89,26 @@ export default {
                 <div class="row">
                     <div class="col-4 pb-2">Username</div>
                     <div class="col-8 pb-2">: {{ dataStore.cart.username }}</div>
+                    <button type="button" class="btn btn-outline-light me-1" @click="this.customerStore.logout()"
+                        style="flex: 1 1 0px">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="row p-2 text-light border border-light" v-else>
+            <div class="container-fluid">
+                <div class="row">
+                    <input type="text" placeholder="input your username here" id="customerUsername" class="mb-3">
+                    <input type="password" placeholder="input your password here" id="customerPassword" class="mb-3">
+                    <div class="d-flex flex-row flex-wrap justify-content-between">
+                        <button type="button" class="btn btn-outline-light me-1" @click="" style="flex: 1 1 0px">Sign
+                            Up</button>
+                        <button type="button" class="btn btn-outline-light ms-1" @click="this.loginCustomer()"
+                            style="flex: 1 1 0px">
+                            Login
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -177,3 +217,24 @@ export default {
         </div>
     </div>
 </template>
+
+<style scoped>
+/* style for form login */
+#customerUsername,
+#customerPassword {
+    background: transparent;
+    border: none;
+    color: white;
+    border-bottom: 1px solid white;
+}
+
+#customerUsername:focus,
+#customerPassword:focus {
+    outline: none;
+}
+
+#customerUsername::placeholder,
+#customerPassword::placeholder {
+    color: #dfdfdf
+}
+</style>

@@ -1,9 +1,19 @@
-from flask import Flask, request, jsonify
+import bcrypt
+from datetime import timedelta, datetime
+from flask import Flask, request, jsonify, session
+from flask_cors import CORS
+from flask_login import (
+    LoginManager,
+    UserMixin,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
+from flask_wtf.csrf import CSRFProtect, generate_csrf
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from sqlalchemy.ext.associationproxy import association_proxy
-from datetime import datetime
-from flask_cors import CORS
 
 
 # init
@@ -11,9 +21,27 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 app.config["SECRET_KEY"] = "spos"
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root:@127.0.0.1/spos"
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["REMEMBER_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.permanent_session_lifetime = timedelta(seconds=30)      
 
-CORS(app, resources={r"/*":{'origins': "*"}})
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.session_protection = "strong"
+
+CORS(
+    app, 
+    resources={r"/*":{'origins': "*"}},
+    expose_headers=["Content-Type", "X-CSRFToken"],
+    supports_credentials=True,
+)
+
+csrf = CSRFProtect(app)
+db = SQLAlchemy(app)
+ma = Marshmallow(app)
+
 # app.config['CORS_HEADERS'] = 'Content-Type'
 # CORS(app, resources={r"/*":{'origins': "*", "allow_headers": "Access-Control-Allow-Origin"}})
 # header('Access-Control-Allow-Origin: *');
@@ -24,14 +52,10 @@ CORS(app, resources={r"/*":{'origins': "*"}})
 #     "allow_headers": "Access-Control-Allow-Origin"
 #     }})
 
-db = SQLAlchemy(app)
-ma = Marshmallow(app)
-
-
 
 
 # secondary database models 
-class CartProduct(db.Model):
+class CartProduct(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column("product_id", db.String(18), db.ForeignKey("product.id"), nullable=False)
     cart_id = db.Column("cart_id", db.String(18), db.ForeignKey("cart.id"), nullable=False)
@@ -42,7 +66,7 @@ class CartProduct(db.Model):
     cart = db.relationship("Cart", back_populates="product_association")
 
 
-class CategoryProduct(db.Model):
+class CategoryProduct(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column("product_id", db.String(18), db.ForeignKey("product.id"), nullable=False)
     category_id = db.Column("category_id", db.String(18), db.ForeignKey("category.id"), nullable=False)
@@ -51,8 +75,7 @@ class CategoryProduct(db.Model):
     category = db.relationship("Category", back_populates="products")
 
 
-
-class InvoiceProduct(db.Model):
+class InvoiceProduct(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column("product_id", db.String(18), db.ForeignKey("product.id"), nullable=False)
     invoice_id = db.Column("invoice_id", db.String(18), db.ForeignKey("invoice.id"), nullable=False)
@@ -66,29 +89,31 @@ class InvoiceProduct(db.Model):
 
 
 # primary database models
-class Admin(db.Model):
+class Admin(db.Model, UserMixin):
     __tablename__ = "admin"
-    id = db.Column(db.String(9), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     password = db.Column(db.String(9), nullable=False)
 
-    def __init__(self, aid, password):
-        self.id = aid
-        self.password = password
+    # def __init__(self, aid, password):
+    #     self.id = aid
+    #     self.password = password
 
 
-class Customer(db.Model):
+class Customer(db.Model, UserMixin):
     __tablename__ = "customer"
-    username = db.Column(db.String(9), primary_key=True)
-    password = db.Column(db.String(9), nullable=False)
-    invoices = db.relationship("Invoice", backref="customer")
-    cart = db.relationship("Cart", backref="customer", uselist=False)
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(99), nullable=False, unique=True)
+    password = db.Column(db.String(99), nullable=False)
 
-    def __init__(self, username, password):
-        self.username = username
-        self.password = password
+    invoices = db.relationship("Invoice", backref="customer")               # for one to many relationship as the parent
+    cart = db.relationship("Cart", backref="customer", uselist=False)       # for one to one relationship
+
+    # def __init__(self, username, password):
+    #     self.username = username
+    #     self.password = password
 
 
-class Product(db.Model):
+class Product(db.Model, UserMixin):
     __tablename__ = "product"
     id = db.Column(db.String(18), primary_key=True)
     name = db.Column(db.String(54), nullable=False)
@@ -111,7 +136,7 @@ class Product(db.Model):
         self.img_link = img_link
 
 
-class Category(db.Model):
+class Category(db.Model, UserMixin):
     __tablename__ = "category"
     id = db.Column(db.String(18), primary_key=True)
     name = db.Column(db.String(27), nullable=False)
@@ -123,7 +148,7 @@ class Category(db.Model):
         self.name = name
 
 
-class Cart(db.Model):
+class Cart(db.Model, UserMixin):
     __tablename__ = "cart"
     id = db.Column(db.String(18), primary_key=True)
     date = db.Column(db.String(27), nullable=False)
@@ -131,10 +156,10 @@ class Cart(db.Model):
     discount = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Integer, nullable=False)
     grand_price = db.Column(db.Integer, nullable=False)
+    username = db.Column(db.String(9), db.ForeignKey("customer.username"))  # for one to one relationship
 
-    username = db.Column(db.String(9), db.ForeignKey("customer.username"))
-
-    product_association = db.relationship("CartProduct", back_populates="cart")
+    # for many to many relationship
+    product_association = db.relationship("CartProduct", back_populates="cart") 
     products = association_proxy("product_association", "product")
 
     def __init__(self, date, total_qty, discount, price, grand_price, username, cid="ca-" + datetime.now().strftime("%m%d%H%M%S%f")[:-3]):
@@ -147,14 +172,13 @@ class Cart(db.Model):
         self.username = username
 
 
-class Invoice(db.Model):
+class Invoice(db.Model, UserMixin):
     __tablename__ = "invoice"
     id = db.Column(db.String(18), primary_key=True)
     date = db.Column(db.String(27), nullable=False)
     total_qty = db.Column(db.Integer, nullable=False)
-    total_price = db.Column(db.Integer, nullable=False)
-
-    username = db.Column(db.String(9), db.ForeignKey("customer.username"))
+    total_price = db.Column(db.Integer, nullable=False)                     
+    username = db.Column(db.String(9), db.ForeignKey("customer.username"))  # for one to many relationship as the child
 
     product_association = db.relationship("InvoiceProduct", back_populates="invoice")
     products = association_proxy("product_association", "product")
@@ -274,17 +298,17 @@ def removeCartProduct(username, pId):
 def updateCart():
     response_object  = {"status": "success"}
     if request.method == "POST":
-        post_data = request.get_json()
-        username = post_data.get("username")
+        postData = request.get_json()
+        username = postData.get("username")
         theCart = Cart.query.filter_by(username=username).first()
-        # theCart = post_data
-        theCart.date = post_data.get("date")
-        theCart.grand_price = post_data.get("grand_price")
-        theCart.price = post_data.get("price")
-        theCart.total_qty = post_data.get("total_qty")
+        # theCart = postData
+        theCart.date = postData.get("date")
+        theCart.grand_price = postData.get("grand_price")
+        theCart.price = postData.get("price")
+        theCart.total_qty = postData.get("total_qty")
         db.session.commit()
 
-        for cp in post_data.get("product_association"):
+        for cp in postData.get("product_association"):
             theCP = CartProduct.query.filter_by(cart_id=cp["cart_id"], product_id=cp["product_id"]).first()
             theCP.qty = cp["qty"]
             theCP.subtotal = cp["subtotal"]
@@ -315,18 +339,18 @@ def resetCart(username):
 def addInvoice():
     response_object = {"status": "success"}
     if request.method == "POST":
-        post_data = request.get_json()
+        postData = request.get_json()
         # add new invoice
         newInvoice = Invoice(
-            post_data.get("date"), 
-            post_data.get("total_qty"),
-            post_data.get("total_price"),
-            post_data.get("username")
+            postData.get("date"), 
+            postData.get("total_qty"),
+            postData.get("total_price"),
+            postData.get("username")
         )
         db.session.add(newInvoice)
         db.session.commit()
         # add its products
-        for cp in post_data.get("products"):
+        for cp in postData.get("products"):
             theProduct = Product.query.filter_by(id=cp["product_id"]).first()
             theIP = InvoiceProduct(product=theProduct, invoice=newInvoice, qty=cp["qty"], subtotal=cp["subtotal"])
             db.session.add(theIP)
@@ -343,6 +367,68 @@ def getInvoice(username):
     cInv = Invoice.query.filter_by(username=username).all()
     invoice_schema = InvoiceSchema(many=True)
     return invoice_schema.dump(cInv)
+
+
+
+
+# user stuffs
+@login_manager.user_loader
+def load_user(user_id):
+    return Customer.query.get(int(user_id))
+
+
+@app.route("/getcsrf", methods=["GET"])
+def get_csrf():
+    token = generate_csrf()
+    response = jsonify({"detail": "CSRF cookie set"})
+    response.headers.set("X-CSRFToken", token)
+    return response
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    response_object = {"status": "success"}
+    if request.method == "POST":
+        postData = request.get_json()
+        username = postData.get("username")
+        password = postData.get("password")
+
+        # validate data login
+        theCustomer = Customer.query.filter_by(username=username).first()
+        if bcrypt.checkpw(password.encode(), theCustomer.password.encode()):
+            # logging in and create a session
+            login_user(theCustomer)
+            response_object["message"] = "login success"
+        else:
+            response_object["status"] = "fail"
+            response_object["message"] = "data login is not available"
+    else:
+        response_object["status"] = "fail"
+        response_object["message"] = "request method is not accepted"
+    return response_object
+
+
+@app.route("/getsession", methods=["GET"])
+def check_session():
+    response_object = {"status": "success"}
+    if current_user.is_authenticated:
+        return response_object
+
+    response_object["status"] = "fail"
+    return response_object
+
+
+@app.route("/logout", methods=["GET", "POST"])
+@login_required
+def logout():
+    response_object = {"status": "success"}
+
+    # logging out the customer and remove the session
+    logout_user()
+    return response_object
+
+
+
 
 
 
@@ -377,19 +463,19 @@ def testing():
 def addCart():
     response_object  = {"status": "success"}
     if request.method == "POST":
-        post_data = request.get_json()
+        postData = request.get_json()
         newCart = Cart(
-            post_data.get("date"),
-            post_data.get("total_qty"),
-            post_data.get("discount"),
-            post_data.get("total_price"),
-            post_data.get("username")
+            postData.get("date"),
+            postData.get("total_qty"),
+            postData.get("discount"),
+            postData.get("total_price"),
+            postData.get("username")
         )
         db.session.add(newCart)
         db.session.commit()
 
         # carting
-        relatedProduct = Product.query.filter_by(id=post_data.get("products")[0]).first()
+        relatedProduct = Product.query.filter_by(id=postData.get("products")[0]).first()
         relatedProduct.carting.append(newCart)
         db.session.commit()
 
@@ -404,11 +490,19 @@ def InitializeData():
     response_object = {"status": "success"}
     try:
         # add an admin
-        adminA = Admin("admA", "pwAA")
+        adminA = Admin(password="pwAA")
 
         # add customers
-        cusA = Customer("cusA", "pwCA")
-        cusB = Customer("cusB", "pwCB")
+        cusA = Customer(username="cusA", password=bcrypt.hashpw("pwCA".encode(), bcrypt.gensalt()))
+        cusB = Customer(username="cusB", password=bcrypt.hashpw("pwCB".encode(), bcrypt.gensalt()))
+
+        # execute primary data
+        db.session.add_all([
+            adminA, 
+            cusA, cusB
+        ])
+        db.session.commit()
+        print("1st added is succeed")
 
         # add their (customers) carts
         cartA = Cart(datetime.now().strftime("%Y%m%d%H%M%S"), 0, 36, 0, 0, "cusA", cid="ca-1")
@@ -429,13 +523,12 @@ def InitializeData():
 
         # execute primary data
         db.session.add_all([
-            adminA, 
-            cusA, cusB, 
             cartA, cartB,
             prodA, prodB,
             ctgA, ctgB, ctgC, ctgD
         ])
         db.session.commit()
+        print("2nd added is succeed")
 
 
         # add their (products) categories
@@ -449,6 +542,7 @@ def InitializeData():
             pcA, pcB, pcC, pcD
         ])
         db.session.commit()
+        print("3rd added is succeed")
 
         response_object["message"] = "all data have been added"
     except:
@@ -465,8 +559,86 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
 
-
     app.run(debug=True)
+
+
+
+
+
+
+# @app.route("/login", methods=["GET", "POST"])
+# def login():
+#     response_object = {"status": "success"}
+#     if request.method == "POST":
+#         if 'authKey' in session:
+#             response_object["data"] = session['authKey'].decode()
+#             response_object["message"] = "login success"
+#         else:
+#             postData = request.get_json()
+#             username = postData.get("username")
+#             password = postData.get("password")
+
+#             # validate data login
+#             theCustomer = Customer.query.filter_by(username=username).first()
+#             if bcrypt.checkpw(password.encode(), theCustomer.password.encode()):
+#                 # encrypt username
+#                 encryptedUsername = bcrypt.hashpw(username.encode(), bcrypt.gensalt())
+#                 print("ASDASD:",encryptedUsername)
+#                 print("ASDASD:",encryptedUsername.decode())
+
+#                 # create a session with encryptedPassword as the password
+#                 # encryptedUsername == authKey
+#                 session.permanent = True
+#                 session['username'] = username
+#                 session['authKey'] = encryptedUsername
+#                 response_object["data"] = session['authKey'].decode()
+#                 response_object["message"] = "login success"
+#             else:
+#                 response_object["status"] = "fail"
+#                 response_object["message"] = "data login is not available"
+#     else:
+#         response_object["status"] = "fail"
+#         response_object["message"] = "request is not accepted"
+#     return response_object
+
+
+# @app.route("/logout", methods=["GET", "POST"])
+# def logout():
+#     response_object = {"status": "success"}
+#     session.pop("authKey", None)
+#     session.pop("username", None)
+#     if "authKey" in session or "username" in session:
+#         response_object["status"] = "fail"
+#         response_object["message"] = "logout is failed"
+#     else:
+#         response_object["message"] = "logout is succeed"
+#     return response_object
+
+
+# @app.route("/verAuth", methods=["GET", "POST"])
+# def verAuth():
+#     response_object = {"status": "success"}
+#     if request.method == "POST":
+#         if 'authKey' in session:
+#             postData = request.get_json()
+#             print("   ")
+#             print(session["username"])
+#             print(postData["frontKey"])
+#             print(session["username"].encode())
+#             print(postData["frontKey"].encode())
+#             print("   ")
+#             if bcrypt.checkpw(session["username"].encode(), postData["frontKey"].encode()):
+#                 response_object["message"] = "auth key valid"
+#             else:
+#                 response_object["status"] = "fail"
+#                 response_object["message"] = "auth key invalid"
+#         else:
+#             response_object["status"] = "fail"
+#             response_object["message"] = "auth key has not yet added"
+#     else:
+#         response_object["status"] = "fail"
+#         response_object["message"] = "request is not accepted"
+#     return response_object
 
 
 
@@ -479,4 +651,15 @@ if __name__ == "__main__":
 # references:
 # https://www.youtube.com/watch?v=VVX7JIWx-ss&ab_channel=PrettyPrinted (one-to-many database relationship with flask-alchemy)
 # https://www.youtube.com/watch?v=47i-jzrrIGQ&ab_channel=PrettyPrinted (many-to-many database relationship with flask-alchemy)
+# https://www.youtube.com/watch?v=IlkVu_LWGys&ab_channel=PrettyPrinted (many-to-many database relationship with flask-alchemy, association cover)
 # https://www.youtube.com/watch?v=JI76IvF9Lwg&ab_channel=PrettyPrinted (one-to-one database relationship with flask-alchemy)
+
+# parameter descriptions:
+# backref behaves as if create an additional column inside the table that has relationship with
+# back_populates tells SqlAlchemy which column to link with when it joins the two tables
+# associationproxy helps to simplify the process of accessing between two tables that have many to many relationship
+
+# code reflections:
+# I just realized that the implementation of using relationship is still solely for initiation, while for CRUD process, it turns out has not yet being used.
+# for example, when create a new invoice, what I should do is to add also the backref inside of the initiation. 
+# But for many to many relationship, it turns out I have implemented it!! 

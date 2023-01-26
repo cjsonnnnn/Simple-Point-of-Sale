@@ -81,7 +81,6 @@ export const useDataStore = defineStore('data', {
         addCartProduct(username, pId) {
             axios.get(`http://localhost:5000/addCartProduct/${username}&${pId}`)
                 .then(res => {
-                    console.log(res)
                     this.getCart("cusA")
                 }).catch(err => {
                     console.log(err)
@@ -90,7 +89,6 @@ export const useDataStore = defineStore('data', {
         removeCartProduct(username, pId) {
             axios.get(`http://localhost:5000/removeCartProduct/${username}&${pId}`)
                 .then(res => {
-                    console.log(res)
                     this.getCart("cusA")
                 }).catch(err => {
                     console.log(err)
@@ -99,7 +97,6 @@ export const useDataStore = defineStore('data', {
         updateCart() {
             axios.post('http://localhost:5000/updateCart', this.cart)
                 .then(res => {
-                    console.log(res)
                     this.getCart("cusA")
                 }).catch(err => {
                     console.log(err)
@@ -108,7 +105,6 @@ export const useDataStore = defineStore('data', {
         resetCart(username) {
             axios.get(`http://localhost:5000/resetCart/${username}`)
                 .then(res => {
-                    console.log(res)
                     // update cart based on username
                     this.getCart("cusA")
                 }).catch(err => {

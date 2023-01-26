@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 29, 2022 at 11:28 AM
+-- Generation Time: Jan 26, 2023 at 03:56 PM
 -- Server version: 5.7.36
 -- PHP Version: 8.0.13
 
@@ -29,17 +29,17 @@ SET time_zone = "+00:00";
 
 DROP TABLE IF EXISTS `admin`;
 CREATE TABLE IF NOT EXISTS `admin` (
-  `id` varchar(9) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `password` varchar(9) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `admin`
 --
 
 INSERT INTO `admin` (`id`, `password`) VALUES
-('admA', 'pwAA');
+(1, 'pwAA');
 
 -- --------------------------------------------------------
 
@@ -65,8 +65,8 @@ CREATE TABLE IF NOT EXISTS `cart` (
 --
 
 INSERT INTO `cart` (`id`, `date`, `total_qty`, `discount`, `price`, `grand_price`, `username`) VALUES
-('ca-1', '29/12/2022', 0, 36, 0, 0, 'cusA'),
-('ca-2', '20221227232531', 0, 36, 0, 0, 'cusB');
+('ca-1', '20230126222825', 0, 36, 0, 0, 'cusA'),
+('ca-2', '20230126222825', 0, 36, 0, 0, 'cusB');
 
 -- --------------------------------------------------------
 
@@ -84,7 +84,15 @@ CREATE TABLE IF NOT EXISTS `cart_product` (
   PRIMARY KEY (`id`),
   KEY `product_id` (`product_id`),
   KEY `cart_id` (`cart_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=118 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `cart_product`
+--
+
+INSERT INTO `cart_product` (`id`, `product_id`, `cart_id`, `qty`, `subtotal`) VALUES
+(3, 'prd-1', 'ca-1', 1, 2700000),
+(4, 'prd-2', 'ca-1', 1, 1800000);
 
 -- --------------------------------------------------------
 
@@ -143,18 +151,20 @@ INSERT INTO `category_product` (`id`, `product_id`, `category_id`) VALUES
 
 DROP TABLE IF EXISTS `customer`;
 CREATE TABLE IF NOT EXISTS `customer` (
-  `username` varchar(9) NOT NULL,
-  `password` varchar(9) NOT NULL,
-  PRIMARY KEY (`username`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(99) NOT NULL,
+  `password` varchar(99) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`)
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `customer`
 --
 
-INSERT INTO `customer` (`username`, `password`) VALUES
-('cusA', 'pwCA'),
-('cusB', 'pwCB');
+INSERT INTO `customer` (`id`, `username`, `password`) VALUES
+(1, 'cusA', '$2b$12$AUdrlhZXzRQ.IafN2QSkPOnpajMcg2X04aDIGUchAgCd51aLIULbe'),
+(2, 'cusB', '$2b$12$N0M5j8IVpRm4DPzX53EDmeQMdMuVaXFTCn9K9IL3bldsvSHub0xQy');
 
 -- --------------------------------------------------------
 
@@ -173,19 +183,6 @@ CREATE TABLE IF NOT EXISTS `invoice` (
   KEY `username` (`username`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
---
--- Dumping data for table `invoice`
---
-
-INSERT INTO `invoice` (`id`, `date`, `total_qty`, `total_price`, `username`) VALUES
-('inv-20221228023927', '28/12/2022', 9, 14400000, 'cusA'),
-('inv-20221228034644', '28/12/2022', 6, 9216000, 'cusA'),
-('inv-20221228074954', '28/12/2022', 6, 9216000, 'cusA'),
-('inv-1228083313185', '28/12/2022', 7, 10368000, 'cusA'),
-('inv-1228083614815', '28/12/2022', 9, 12672000, 'cusA'),
-('inv-1228195825051', '28/12/2022', 13, 19584000, 'cusA'),
-('inv-1229181237623', '29/12/2022', 6, 9792000, 'cusA');
-
 -- --------------------------------------------------------
 
 --
@@ -202,27 +199,7 @@ CREATE TABLE IF NOT EXISTS `invoice_product` (
   PRIMARY KEY (`id`),
   KEY `product_id` (`product_id`),
   KEY `invoice_id` (`invoice_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `invoice_product`
---
-
-INSERT INTO `invoice_product` (`id`, `product_id`, `invoice_id`, `qty`, `subtotal`) VALUES
-(1, 'prd-2', 'inv-20221228023927', 2, 3600000),
-(2, 'prd-1', 'inv-20221228023927', 7, 18900000),
-(3, 'prd-2', 'inv-20221228034644', 2, 3600000),
-(4, 'prd-1', 'inv-20221228034644', 4, 10800000),
-(5, 'prd-2', 'inv-20221228074954', 2, 3600000),
-(6, 'prd-1', 'inv-20221228074954', 4, 10800000),
-(7, 'prd-2', 'inv-1228083313185', 3, 5400000),
-(8, 'prd-1', 'inv-1228083313185', 4, 10800000),
-(9, 'prd-2', 'inv-1228083614815', 5, 9000000),
-(10, 'prd-1', 'inv-1228083614815', 4, 10800000),
-(11, 'prd-2', 'inv-1228195825051', 5, 9000000),
-(12, 'prd-1', 'inv-1228195825051', 8, 21600000),
-(13, 'prd-2', 'inv-1229181237623', 1, 1800000),
-(14, 'prd-1', 'inv-1229181237623', 5, 13500000);
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
