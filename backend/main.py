@@ -14,6 +14,7 @@ from flask_wtf.csrf import CSRFProtect, generate_csrf
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from sqlalchemy.ext.associationproxy import association_proxy
+from marshmallow_sqlalchemy import SQLAlchemySchema
 
 
 # init
@@ -395,7 +396,7 @@ def login():
 
         # validate data login
         theCustomer = Customer.query.filter_by(username=username).first()
-        if bcrypt.checkpw(password.encode(), theCustomer.password.encode()):
+        if bcrypt.hashpw(password, theCustomer.password) == theCustomer.password:
             # logging in and create a session
             login_user(theCustomer)
             response_object["message"] = "login success"
@@ -493,8 +494,8 @@ def InitializeData():
         adminA = Admin(password="pwAA")
 
         # add customers
-        cusA = Customer(username="cusA", password=bcrypt.hashpw("pwCA".encode(), bcrypt.gensalt()))
-        cusB = Customer(username="cusB", password=bcrypt.hashpw("pwCB".encode(), bcrypt.gensalt()))
+        cusA = Customer(username="cusA", password=bcrypt.hashpw("pwCA", bcrypt.gensalt()))
+        cusB = Customer(username="cusB", password=bcrypt.hashpw("pwCB", bcrypt.gensalt()))
 
         # execute primary data
         db.session.add_all([
